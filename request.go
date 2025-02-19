@@ -12,8 +12,6 @@ import (
 	"github.com/yosida95/uritemplate/v3"
 )
 
-const requestProtocol = "connect-ip"
-
 var capsuleProtocolHeaderValue string
 
 func init() {
@@ -38,7 +36,7 @@ type RequestParseError struct {
 func (e *RequestParseError) Error() string { return e.Err.Error() }
 func (e *RequestParseError) Unwrap() error { return e.Err }
 
-func ParseRequest(r *http.Request, template *uritemplate.Template) (*Request, error) {
+func ParseRequest(r *http.Request, template *uritemplate.Template, requestProtocol string) (*Request, error) {
 	if len(template.Varnames()) > 0 {
 		return nil, errors.New("connect-ip-go currently does not support IP flow forwarding")
 	}
