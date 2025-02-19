@@ -58,7 +58,7 @@ func TestIncomingDatagrams(t *testing.T) {
 	t.Run("empty packets", func(t *testing.T) {
 		conn := newProxiedConn(&mockStream{})
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket([]byte{}),
+			conn.handleIncomingProxiedPacket([]byte{}, false),
 			"connect-ip: empty packet",
 		)
 	})
@@ -68,7 +68,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		data := make([]byte, 20)
 		data[0] = 5 << 4 // IPv5
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(data),
+			conn.handleIncomingProxiedPacket(data, false),
 			"connect-ip: unknown IP versions: 5",
 		)
 	})
@@ -83,7 +83,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		}).Marshal()
 		require.NoError(t, err)
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(data[:ipv4.HeaderLen-1]),
+			conn.handleIncomingProxiedPacket(data[:ipv4.HeaderLen-1], false),
 			"connect-ip: malformed datagram: too short",
 		)
 	})
@@ -91,7 +91,7 @@ func TestIncomingDatagrams(t *testing.T) {
 	t.Run("IPv6 packet too short", func(t *testing.T) {
 		conn := newProxiedConn(&mockStream{})
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(ipv6Header[:ipv6.HeaderLen-1]),
+			conn.handleIncomingProxiedPacket(ipv6Header[:ipv6.HeaderLen-1], false),
 			"connect-ip: malformed datagram: too short",
 		)
 	})
@@ -110,7 +110,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		data, err := hdr.Marshal()
 		require.NoError(t, err)
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(data),
+			conn.handleIncomingProxiedPacket(data, false),
 			"connect-ip: datagram source address not allowed: 192.168.0.11",
 		)
 	})
@@ -131,14 +131,14 @@ func TestIncomingDatagrams(t *testing.T) {
 		}
 		data, err := hdr.Marshal()
 		require.NoError(t, err)
-		require.NoError(t, conn.handleIncomingProxiedPacket(data))
+		require.NoError(t, conn.handleIncomingProxiedPacket(data, false))
 
 		// 10.1.2.4 is outside the range of allowed addresses
 		hdr.Dst = net.IPv4(10, 1, 2, 4)
 		data, err = hdr.Marshal()
 		require.NoError(t, err)
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(data),
+			conn.handleIncomingProxiedPacket(data, false),
 			"connect-ip: datagram destination address / protocol not allowed: 10.1.2.4 (protocol: 0)",
 		)
 	})
@@ -160,13 +160,13 @@ func TestIncomingDatagrams(t *testing.T) {
 		}
 		data, err := hdr.Marshal()
 		require.NoError(t, err)
-		require.NoError(t, conn.handleIncomingProxiedPacket(data))
+		require.NoError(t, conn.handleIncomingProxiedPacket(data, false))
 
 		hdr.Protocol = 41
 		data, err = hdr.Marshal()
 		require.NoError(t, err)
 		require.ErrorContains(t,
-			conn.handleIncomingProxiedPacket(data),
+			conn.handleIncomingProxiedPacket(data, false),
 			"connect-ip: datagram destination address / protocol not allowed: 10.1.2.3 (protocol: 41)",
 		)
 
@@ -174,7 +174,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		hdr.Protocol = ipProtoICMP
 		data, err = hdr.Marshal()
 		require.NoError(t, err)
-		require.NoError(t, conn.handleIncomingProxiedPacket(data))
+		require.NoError(t, conn.handleIncomingProxiedPacket(data, false))
 	})
 
 	t.Run("packet from assigned address", func(t *testing.T) {
@@ -189,7 +189,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		}
 		data, err := hdr.Marshal()
 		require.NoError(t, err)
-		require.Error(t, conn.handleIncomingProxiedPacket(data), "connect-ip: datagram destination address")
+		require.Error(t, conn.handleIncomingProxiedPacket(data, false), "connect-ip: datagram destination address")
 
 		// now assign 192.168.0.11 to this connection
 		readChan <- (&addressAssignCapsule{
@@ -201,7 +201,7 @@ func TestIncomingDatagrams(t *testing.T) {
 		_, err = conn.LocalPrefixes(ctx)
 		require.NoError(t, err)
 		// after processing the address assignment, this is a valid packet
-		require.NoError(t, conn.handleIncomingProxiedPacket(data))
+		require.NoError(t, conn.handleIncomingProxiedPacket(data, false))
 	})
 }
 
@@ -230,7 +230,7 @@ func FuzzIncomingDatagram(f *testing.F) {
 	f.Add(ipv6Header)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		conn.handleIncomingProxiedPacket(data)
+		conn.handleIncomingProxiedPacket(data, false)
 	})
 }
 
