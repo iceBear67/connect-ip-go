@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/Diniboy1123/connect-ip-go v0.0.0-20250220050656-56698ca53ed4
-	github.com/quic-go/quic-go v0.48.0
+	github.com/apernet/quic-go v0.48.0
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/stretchr/testify v1.9.0
 	github.com/vishvananda/netlink v1.3.0

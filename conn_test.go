@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"
 
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/http3"
+	"github.com/apernet/quic-go"
+	"github.com/apernet/quic-go/http3"
 
 	"github.com/stretchr/testify/require"
 )
